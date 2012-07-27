@@ -48,7 +48,7 @@ for i in range(iterations):
         # TODO: save the detected patches
         cv.Rectangle(img, (x,y), (x+w,y+h), 255)
         sizes.append((w, h))
-        res.append()
+        res.append(im[y+1:y+h, x+1:x+w])
     if faces:
         cv.SaveImage("faces_detected_%d.jpg" % i, img)
 
@@ -63,6 +63,8 @@ plt.hist([x[0] for x in sizes])
 plt.subplot(212)
 plt.hist([x[1] for x in sizes])
 plt.savefig('sizes_hist.png')
+
+pickle.dump(res, open('res.pckl', 'w'))
 
 # TODO: average the patches (1: only some of equal size, 2: interpolate to equal size)
 
