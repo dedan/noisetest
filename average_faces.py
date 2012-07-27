@@ -55,4 +55,28 @@ plt.savefig(os.path.join(res_folder, 'patches_inter.png'))
 
 
 
+# take mean over all images up to a certain size. 'reverse interpolation'
+patches = [r for r in res if r.shape[0] <= max_size]
+min_size = np.min([p.shape[0] for p in patches])
+patches_interpolated = []
+for patch in patches:
+
+    back = np.ones((min_size, min_size)) * 127
+    patch_size = patch.shape[0]
+
+    for i in range(patch_size):
+        for j in range(patch_size):
+
+            i_trans = np.floor((float(i) / patch_size) * min_size)
+            j_trans = np.floor((float(j) / patch_size) * min_size)
+            back[i_trans, j_trans] = patch[i, j]
+    patches_interpolated.append(back)
+    patches_inter_mean = np.mean(np.array(patches_interpolated), axis=0)
+
+plt.figure()
+plt.imshow(patches_inter_mean, cmap=plt.cm.gray, interpolation='nearest')
+plt.savefig(os.path.join(res_folder, 'patches_inter_inv.png'))
+
+
+
 
