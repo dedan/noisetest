@@ -27,19 +27,10 @@ for i in range(iterations):
 
     t = cv.GetTickCount()
     rand_im = np.random.rand(image_size, image_size)
-    plt.figure()
-    plt.subplot(311)
-    plt.imshow(rand_im)
     im = signal.convolve(rand_im, kernel)
-    plt.subplot(312)
-    plt.imshow(im)
 
-    ima = ((im / np.max(im)) * 255).astype(np.uint8)
-    plt.subplot(313)
-    plt.imshow(ima)
-
-    plt.savefig('test.png')
-    img = cv.fromarray(ima)
+    im = ((im / np.max(im)) * 255).astype(np.uint8)
+    img = cv.fromarray(im)
 
     noise_creation_times.append(cv.GetTickCount() - t)
 
@@ -53,8 +44,8 @@ for i in range(iterations):
 
     for (x,y,w,h),n in faces:
         cv.Rectangle(img, (x,y), (x+w,y+h), 255)
-    # if faces:
-    cv.SaveImage("faces_detected_%d.jpg" % i, img)
+    if faces:
+        cv.SaveImage("faces_detected_%d.jpg" % i, img)
 
 avg_noise_time = np.mean(noise_creation_times)
 print "avg, noise creation time = %gms" % (avg_noise_time/(cv.GetTickFrequency()*1000.))
