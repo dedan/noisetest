@@ -21,12 +21,38 @@ counts, bins = np.histogram(widths, range=(minw, maxw), bins=(maxw-minw))
 
 indeces = list(reversed(np.argsort(counts.tolist()).tolist()))
 
-for i, idx in enumerate(indeces[:n_images]):
+# for i, idx in enumerate(indeces[:n_images]):
 
-    patches = [r for r in res if r.shape[0] == int(bins[idx])]
-    patches_mean = np.mean(np.array(patches), axis=0)
+#     patches = [r for r in res if r.shape[0] == int(bins[idx])]
+#     patches_mean = np.mean(np.array(patches), axis=0)
 
-    plt.figure()
-    plt.imshow(patches_mean, cmap=plt.cm.gray, interpolation='nearest')
-    plt.savefig(os.path.join(res_folder, 'patches_mean_%d.png' % i))
+#     plt.figure()
+#     plt.imshow(patches_mean, cmap=plt.cm.gray, interpolation='nearest')
+#     plt.savefig(os.path.join(res_folder, 'patches_mean_%d.png' % i))
+
+# take mean over all images up to a certain size. Needs interpolation to fit sizes
+patches = [r for r in res if r.shape[0] <= max_size]
+x_y_range = range(max_size)
+patches_interpolated = []
+for patch in patches:
+
+    back = np.ones((max_size, max_size)) * 127
+    patch_size = patch.shape[0]
+
+    for i in range(patch_size):
+        for j in range(patch_size):
+
+            i_trans = np.floor((float(i) / patch_size) * max_size)
+            j_trans = np.floor((float(j) / patch_size) * max_size)
+            back[i_trans, j_trans] = patch[i, j]
+    patches_interpolated.append(back)
+    patches_inter_mean = np.mean(np.array(patches_interpolated), axis=0)
+
+plt.figure()
+plt.imshow(patches_inter_mean, cmap=plt.cm.gray, interpolation='nearest')
+plt.savefig(os.path.join(res_folder, 'patches_inter.png'))
+
+
+
+
 
