@@ -54,34 +54,19 @@ for folder in folders:
     # take mean over all images up to a certain size. Needs interpolation to fit sizes
     patches = [r for r in res if r.shape[0] <= max_size]
     min_size = np.min([p.shape[0] for p in patches])
-    patches_interpolated = []
     patches_rev_interpolated = []
     for patch in patches:
 
-        back_inter = np.ones((max_size, max_size)) * 127
         back_rev_inter = np.ones((min_size, min_size)) * 127
-
         patch_size = patch.shape[0]
 
         for i in range(patch_size):
             for j in range(patch_size):
-
-                i_trans = np.floor((float(i) / patch_size) * max_size)
-                j_trans = np.floor((float(j) / patch_size) * max_size)
-                back_inter[i_trans, j_trans] = patch[i, j]
-
                 i_trans = np.floor((float(i) / patch_size) * min_size)
                 j_trans = np.floor((float(j) / patch_size) * min_size)
                 back_rev_inter[i_trans, j_trans] = patch[i, j]
-
-        patches_interpolated.append(back_inter)
         patches_rev_interpolated.append(back_rev_inter)
 
-    plt.figure()
-    patches_inter_mean = np.mean(np.array(patches_interpolated), axis=0)
-    plt.imshow(patches_inter_mean, cmap=plt.cm.gray, interpolation='nearest')
-    plt.savefig(os.path.join(res_folder, folder, 'patches_inter.png'))
-    plt.figure()
     patches_rev_inter_mean = np.mean(np.array(patches_rev_interpolated), axis=0)
     plt.imshow(patches_rev_inter_mean, cmap=plt.cm.gray, interpolation='nearest')
     plt.savefig(os.path.join(res_folder, folder, 'patches_rev_inter.png'))
