@@ -7,7 +7,7 @@
 
 # Usage: python face_detect.py <image_file>
 
-import sys, os
+import sys, os, pickle
 import cv
 import numpy as np
 import pylab as plt
@@ -47,10 +47,10 @@ for i in range(iterations):
     for (x,y,w,h),n in faces:
         # TODO: save the detected patches
         cv.Rectangle(img, (x,y), (x+w,y+h), 255)
-        sizes.append((w, h))
+        sizes.append(w)
         res.append(im[y+1:y+h, x+1:x+w])
-    if faces:
-        cv.SaveImage("faces_detected_%d.jpg" % i, img)
+    # if faces:
+    #     cv.SaveImage("faces_detected_%d.jpg" % i, img)
 
 avg_noise_time = np.mean(noise_creation_times)
 print "avg, noise creation time = %gms" % (avg_noise_time/(cv.GetTickFrequency()*1000.))
@@ -58,10 +58,7 @@ avg_detection_time = np.mean(detection_times)
 print "avg, detection_times time = %gms" % (avg_detection_time/(cv.GetTickFrequency()*1000.))
 
 plt.figure()
-plt.subplot(211)
-plt.hist([x[0] for x in sizes])
-plt.subplot(212)
-plt.hist([x[1] for x in sizes])
+plt.hist([sizes])
 plt.savefig('sizes_hist.png')
 
 pickle.dump(res, open('res.pckl', 'w'))
