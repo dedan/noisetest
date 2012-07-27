@@ -1,67 +1,64 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+    use the face detection of opencv on noise images
 
-# face_detect.py
+    the noise is white with some correlations induced by convolution with
+    a rectangular kernel
 
-# Face Detection using OpenCV. Based on sample code from:
-# http://python.pastebin.com/m76db1d6b
+    Created by stephan.gabler@gmail.com on 2012-01-27.
+    Copyright (c) 2012. All rights reserved.
+"""
 
-# Usage: python face_detect.py <image_file>
+# TODO: try different kernel widths and different xml files
+# TODO: evaluate outcome with respect to number of detected images and how the average images look like.
 
-import sys, os, pickle
+import sys, os, pickle, json, datetime
 import cv
 import numpy as np
 import pylab as plt
 from scipy import signal
 
+out_path = '/Users/dedan/projects/bci/noisetest/results/'
 image_size = 100
-kernel_size = 5
-iterations = 10000
+iterations = 100
+kernels = [3, 5, 10]
+xml_files = ['haarcascade_frontalface_default.xml',
+             'haarcascade_eye.xml',
+             'haarcascade_frontalface_alt.xml']
 
-kernel = np.ones((kernel_size, kernel_size))
+for kernel_size in kernels:
 
-noise_creation_times = []
-detection_times = []
-sizes = []
-res = []
-img = cv.LoadImage('lena.jpeg', 0)
+    for xml_file in xml_files:
 
-for i in range(iterations):
+        info = {'kernel': kernel_size, 'xml_file': xml_file,
+                'image_size': image_size, 'iterations': iterations,
+                'noise_times': [], 'detection_times': []}
+        kernel = np.ones((kernel_size, kernel_size))
+        res = []
+        hc = cv.Load('/usr/local/share/opencv/haarcascades/' + xml_file)
 
-    t = cv.GetTickCount()
-    rand_im = np.random.rand(image_size, image_size)
-    im = signal.convolve(rand_im, kernel, mode='valid')
+        for i in range(iterations):
 
-    im = ((im / np.max(im)) * 255).astype(np.uint8)
-    img = cv.fromarray(im)
+            t = cv.GetTickCount()
+            rand_im = np.random.rand(image_size, image_size)
+            im = signal.convolve(rand_im, kernel, mode='valid')
+            im = ((im / np.max(im)) * 255).astype(np.uint8)
+            img = cv.fromarray(im)
+            info['noise_times'].append(cv.GetTickCount() - t)
 
-    noise_creation_times.append(cv.GetTickCount() - t)
+            faces = cv.HaarDetectObjects(img, hc, cv.CreateMemStorage(), 1.2, 1,
+                                         cv.CV_HAAR_DO_CANNY_PRUNING)
+            info['detection_times'].append(cv.GetTickCount() - t)
 
-    xml_file = 'haarcascade_frontalface_default.xml'
-    # xml_file = 'haarcascade_eye.xml'
-    # xml_file = 'haarcascade_frontalface_alt.xml'
-    hc = cv.Load('/usr/local/share/opencv/haarcascades/' + xml_file)
-    faces = cv.HaarDetectObjects(img, hc, cv.CreateMemStorage(), 1.2, 1,
-                                 cv.CV_HAAR_DO_CANNY_PRUNING)
-    detection_times.append(cv.GetTickCount() - t)
+            if len(faces) > 1:
+                print 'more than one face in an image'
+            for (x,y,w,h), _ in faces:
+                res.append(im[y+1:y+h, x+1:x+w])
 
-    for (x,y,w,h),n in faces:
-        # TODO: save the detected patches
-        cv.Rectangle(img, (x,y), (x+w,y+h), 255)
-        sizes.append(w)
-        res.append(im[y+1:y+h, x+1:x+w])
-    # if faces:
-    #     cv.SaveImage("faces_detected_%d.jpg" % i, img)
-
-avg_noise_time = np.mean(noise_creation_times)
-print "avg, noise creation time = %gms" % (avg_noise_time/(cv.GetTickFrequency()*1000.))
-avg_detection_time = np.mean(detection_times)
-print "avg, detection_times time = %gms" % (avg_detection_time/(cv.GetTickFrequency()*1000.))
-
-plt.figure()
-plt.hist([sizes])
-plt.savefig('sizes_hist.png')
-
-pickle.dump(res, open('res.pckl', 'w'))
-
-# TODO: average the patches (1: only some of equal size, 2: interpolate to equal size)
+        timestamp = datetime.datetime.now().strftime('%d%m%y_%H%M%S')
+        tmp_folder = os.path.join(out_path, timestamp)
+        os.mkdir(tmp_folder)
+        pickle.dump(res, open(os.path.join(tmp_folder, 'res.pckl'), 'w'))
+        json.dump(info, open(os.path.join(tmp_folder, 'info.json'), 'w'))
 
