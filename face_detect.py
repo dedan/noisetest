@@ -10,9 +10,6 @@
     Copyright (c) 2012. All rights reserved.
 """
 
-# TODO: try different kernel widths and different xml files
-# TODO: evaluate outcome with respect to number of detected images and how the average images look like.
-
 import sys, os, pickle, json, datetime
 import cv
 import numpy as np
@@ -38,6 +35,7 @@ for kernel_size in kernels:
         res = []
         hc = cv.Load('/usr/local/share/opencv/haarcascades/' + xml_file)
 
+        noise_times, dect_times = [], []
         for i in range(iterations):
 
             t = cv.GetTickCount()
@@ -45,17 +43,19 @@ for kernel_size in kernels:
             im = signal.convolve(rand_im, kernel, mode='valid')
             im = ((im / np.max(im)) * 255).astype(np.uint8)
             img = cv.fromarray(im)
-            info['noise_times'].append(cv.GetTickCount() - t)
+            noise_times.append(cv.GetTickCount() - t)
 
             faces = cv.HaarDetectObjects(img, hc, cv.CreateMemStorage(), 1.2, 1,
                                          cv.CV_HAAR_DO_CANNY_PRUNING)
-            info['detection_times'].append(cv.GetTickCount() - t)
+            dect_times.append(cv.GetTickCount() - t)
 
             if len(faces) > 1:
                 print 'more than one face in an image'
             for (x,y,w,h), _ in faces:
                 res.append(im[y+1:y+h, x+1:x+w])
 
+        info['noise_times'] = np.mean(noise_times) / (cv.GetTickFrequency()*1000.)
+        info['detection_times'] = np.mean(dect_times) / (cv.GetTickFrequency()*1000.)
         timestamp = datetime.datetime.now().strftime('%d%m%y_%H%M%S')
         tmp_folder = os.path.join(out_path, timestamp)
         os.mkdir(tmp_folder)
