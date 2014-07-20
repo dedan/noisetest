@@ -14,15 +14,15 @@ I presented 100 x 100 pixel images which looked similar to the following:
 
 and asked the algorithm to look for faces. Here some examples of false positives (the ones which are interesting for us)
 
-img2
+![](imgs/img2.png)
 
 The structure of the rest of the experiment is the following. The script face_detect.py creates 10.000 times a random image and presents it to the algorithm. If a face was detected the region in question is saved to a results structure. This method is repeated for different settings.
 
-kernel_width = 3, 5, 10 pixels
-different classifier training files
-xml_files = ['haarcascade_frontalface_default.xml'],
-             'haarcascade_eye.xml',
-             'haarcascade_frontalface_alt.xml']
+    kernel_width = 3, 5, 10 pixels
+    different classifier training files
+    xml_files = ['haarcascade_frontalface_default.xml'],
+                 'haarcascade_eye.xml',
+                 'haarcascade_frontalface_alt.xml']
 
 The results are saved to different folders and analysed using the average_faces.py script. A first summary of the results can be found in the following tabular data:
 
@@ -32,26 +32,26 @@ the table clearly shows that only the frontalface default classifier might be in
 
 So, interesting is the influence of the kernel size on the detected images. The following plot shows a histogram of the patch (face) size detected by the algorithm. It clearly shows that the size of the detected face is proportional to the kernel size.
 
-img3
+![](imgs/img3.png)
 
 left: kernel width = 5 pixel, right: kernel width = 10 pixel
 
 I now faced the problem that the patches are all of different size, therefore I first summed up all patches of equal size. Again left image is the small kernel.
 
-img4
+![](imgs/img4.png)
 
 the images are numbered by the rank of how many patches I had available for them. So the images with a smaller number look smoother because they are the average of more images. The images for a kernel width of five show more details. I think that a kernel of 10 is already too large for a 100 x 100 image.
 
 I then averaged all patches by doing a kind of interpolation (not sure whether it is the right word for what I did) The smallest patch size was chosen as the final size (23 pixels) and pixels from larger images were mapped to their corresponding pixel in the smaller patch, without any fancy averaging because I just wanted a quick solution. Here the results, again for kernel = 5 and 10.
 
-img5
+![](imgs/img5.png)
 
 I think the black line comes from some rounding I do when computing the corresponding pixel in the small patch, but I didn’t have the time to really look into it.
 
 So, kernel size of 5 looks nicer for a 100 x 100 image size and the default classifier gave us the most false positives, here the whole thing again for 100.000 iterations.
 
-img6
-img7
+![](imgs/img6.png)
+![](imgs/img7.png)
 
 I have to think about a better interpolation procedure because this average looks less face like than the averages over patches of the same size.
 
@@ -61,6 +61,7 @@ Problems: to get a more or less clear picture of a face we need thousands of ite
 Another problem that the algorithm selects patches containing the images, resulting in location and size. The ERP of a human in an oddball experiment would only give us the global information of an image. This will also slow down the recognition. Maybe can also be overcome by a gradually building image -> first wider kernel -> selected images get overlayed in background -> small kernel noise will be added on top to fill in the details.
 
 further tests:
+
 * use wider so small kernel width also with the face detection algorithm to try to find more faces in less iterations
 * use another classifier (e.g. houses)
 * better interpolation
